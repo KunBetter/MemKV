@@ -12,7 +12,7 @@ type MemKV struct {
 	Bucket   *Bucket
 }
 
-func MEMKV() *MemKV {
+func DB() *MemKV {
 	kv := &MemKV{
 		HashFunc: murmur3.Sum32,
 		Bucket:   NewBucket(MOD + 1),
@@ -20,12 +20,24 @@ func MEMKV() *MemKV {
 	return kv
 }
 
+func (kv *MemKV) Hash32(d []byte) (keyHash, bucketID uint32) {
+	keyHash = kv.HashFunc(d)
+	hf := uint64(keyHash) * 2654435769
+	bucketID = uint32(hf) & MOD
+	return
+}
+
 func (kv *MemKV) Put(key []byte, value interface{}) {
-	hash, bucketID := kv.Hash32(key)
-	kv.Bucket.Put(key, value, hash, bucketID)
+	keyHash, bucketID := kv.Hash32(key)
+	kv.Bucket.Put(key, value, keyHash, bucketID)
 }
 
 func (kv *MemKV) Get(key []byte) interface{} {
-	hash, bucketID := kv.Hash32(key)
-	return kv.Bucket.Get(key, hash, bucketID)
+	keyHash, bucketID := kv.Hash32(key)
+	return kv.Bucket.Get(key, keyHash, bucketID)
+}
+
+func (kv *MemKV) Del(key []byte) {
+	keyHash, bucketID := kv.Hash32(key)
+	kv.Bucket.Del(key, keyHash, bucketID)
 }

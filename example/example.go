@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	kv := MemKV.MEMKV()
+	kv := MemKV.DB()
 	kv.Put([]byte("a"), "b")
 	kv.Put([]byte("c"), "d")
 	s := time.Now()
@@ -19,4 +19,6 @@ func main() {
 	t := e.UnixNano() - s.UnixNano()
 	var es float64 = float64(t)
 	fmt.Println(kv.Get([]byte("c")), t, es/1e9)
+	kv.Del([]byte("a"))
+	fmt.Println(kv.Get([]byte("a")))
 }
