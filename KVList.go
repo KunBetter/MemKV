@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func BEqual(a, b []byte) bool {
+func BytesEqual(a, b []byte) bool {
 	aLen := len(a)
 	bLen := len(b)
 	if aLen != bLen {
@@ -27,7 +27,7 @@ type KVNode struct {
 
 type KVList struct {
 	Head   *KVNode
-	Length int
+	Length uint64
 }
 
 func NewKVNode(key []byte, value interface{}) *KVNode {
@@ -41,10 +41,14 @@ func NewKVNode(key []byte, value interface{}) *KVNode {
 
 func NewKVList() *KVList {
 	l := &KVList{
-		Head:   NewKVNode([]byte(""), "HEAD"),
+		Head:   NewKVNode([]byte("HEAD"), "HEAD"),
 		Length: 0,
 	}
 	return l
+}
+
+func (l *KVList) Len() uint64 {
+	return l.Length
 }
 
 func (l *KVList) Find(n *KVNode) (*KVNode, *KVNode, bool) {
@@ -53,7 +57,7 @@ func (l *KVList) Find(n *KVNode) (*KVNode, *KVNode, bool) {
 	for head.Next != nil {
 		forward = head
 		head = head.Next
-		if BEqual(head.Key, n.Key) {
+		if BytesEqual(head.Key, n.Key) {
 			return forward, head, true
 		}
 	}
@@ -81,6 +85,9 @@ func (l *KVList) Add(n *KVNode) {
 }
 
 func (l *KVList) Del(n *KVNode) {
+	if l.Length <= 0 {
+		return
+	}
 	p, cur, ok := l.Find(n)
 	if ok {
 		p.Next = cur.Next
@@ -89,13 +96,12 @@ func (l *KVList) Del(n *KVNode) {
 }
 
 func (l *KVList) Get(n *KVNode) *KVNode {
+	if l.Length <= 1 {
+		return l.Head.Next
+	}
 	_, cur, ok := l.Find(n)
 	if !ok {
 		return nil
 	}
 	return cur
-}
-
-func (l *KVList) GetFirst() *KVNode {
-	return l.Head.Next
 }

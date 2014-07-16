@@ -29,7 +29,8 @@ import (
 )
 
 func main() {
-	kv := MemKV.MEMKV()
+	kv := MemKV.DB()
+	//put
 	kv.Put([]byte("a"), "b")
 	kv.Put([]byte("c"), "d")
 	s := time.Now()
@@ -40,5 +41,18 @@ func main() {
 	t := e.UnixNano() - s.UnixNano()
 	var es float64 = float64(t)
 	fmt.Println(kv.Get([]byte("c")), t, es/1e9)
-}
+	//get
+	fmt.Println(kv.Get([]byte("a")))
+	//update
+	kv.Put([]byte("a"), "e")
+	fmt.Println(kv.Get([]byte("a")))
+	//delete
+	kv.Del([]byte("a"))
+	fmt.Println(kv.Get([]byte("a")))
+}  
+Result:
+d 19762130300 19.7621303
+b
+e
+<nil>
 ```

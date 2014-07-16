@@ -2,7 +2,9 @@
 // binary search tree
 package MemKV
 
-import ()
+import (
+	"sync"
+)
 
 type BSTNode struct {
 	Key         uint32
@@ -22,12 +24,14 @@ func NewBSTNode(key uint32, value *KVNode) *BSTNode {
 }
 
 type BST struct {
-	Root *BSTNode
+	Root   *BSTNode
+	RWLock *sync.RWMutex
 }
 
 func BSTer() *BST {
 	return &BST{
-		Root: nil,
+		Root:   nil,
+		RWLock: new(sync.RWMutex),
 	}
 }
 
@@ -54,6 +58,8 @@ func (t *BST) Find(key uint32) (p, cur *BSTNode) {
 }
 
 func (t *BST) Add(key uint32, value *KVNode) {
+	t.RWLock.Lock()
+	defer t.RWLock.Unlock()
 	if t.Root == nil {
 		t.Root = NewBSTNode(key, value)
 		return
@@ -80,6 +86,8 @@ func (n *BSTNode) LeftMax() (p, cur *BSTNode) {
 }
 
 func (t *BST) Get(key uint32, value *KVNode) interface{} {
+	t.RWLock.RLock()
+	defer t.RWLock.RUnlock()
 	if t.Root == nil {
 		return nil
 	}
@@ -87,16 +95,14 @@ func (t *BST) Get(key uint32, value *KVNode) interface{} {
 	if key != n.Key {
 		return nil
 	} else {
-		if n.Value.Length <= 1 {
-			return n.Value.GetFirst().Value
-		} else {
-			return n.Value.Get(value).Value
-		}
+		return n.Value.Get(value).Value
 	}
 	return nil
 }
 
 func (t *BST) Del(key uint32, value *KVNode) {
+	t.RWLock.Lock()
+	defer t.RWLock.Unlock()
 	if t.Root == nil {
 		return
 	}
