@@ -3,7 +3,6 @@ package MemKV
 
 import (
 	"github.com/spaolacci/murmur3"
-	"runtime"
 )
 
 const MOD = 0x000FFFFF
@@ -14,7 +13,6 @@ type MemKV struct {
 }
 
 func DB() *MemKV {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	kv := &MemKV{
 		HashFunc: murmur3.Sum32,
 		Bucket:   NewBucket(MOD + 1),
