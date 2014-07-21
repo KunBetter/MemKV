@@ -62,11 +62,12 @@ func (t *BST) Find(key uint32) (p, cur *BSTNode) {
 func (t *BST) Add(key uint32, value *KVNode) {
 	t.RWLock.Lock()
 	defer t.RWLock.Unlock()
-	var add uint32 = 1
 	if t.Root == nil {
+		t.NCount += 1
 		t.Root = NewBSTNode(key, value)
 		return
 	}
+	var add uint32 = 1
 	_, n := t.Find(key)
 	if key < n.Key {
 		n.Left = NewBSTNode(key, value)
