@@ -27,7 +27,7 @@ type KVNode struct {
 
 type KVList struct {
 	Head   *KVNode
-	Length uint64
+	Length uint32
 }
 
 func NewKVNode(key []byte, value interface{}) *KVNode {
@@ -47,7 +47,7 @@ func NewKVList() *KVList {
 	return l
 }
 
-func (l *KVList) Len() uint64 {
+func (l *KVList) Len() uint32 {
 	return l.Length
 }
 
@@ -73,18 +73,22 @@ func (l *KVList) Print() {
 	fmt.Println()
 }
 
-func (l *KVList) Add(n *KVNode) {
+func (l *KVList) Add(n *KVNode) (add uint32) {
 	_, cur, ok := l.Find(n)
 	if ok {
 		//update
 		cur.Value = n.Value
+		add = 0
 	} else {
 		cur.Next = n
 		l.Length++
+		add = 1
 	}
+	return
 }
 
-func (l *KVList) Del(n *KVNode) {
+func (l *KVList) Del(n *KVNode) (del uint32) {
+	del = 0
 	if l.Length <= 0 {
 		return
 	}
@@ -92,7 +96,9 @@ func (l *KVList) Del(n *KVNode) {
 	if ok {
 		p.Next = cur.Next
 		l.Length--
+		del = 1
 	}
+	return
 }
 
 func (l *KVList) Get(n *KVNode) *KVNode {

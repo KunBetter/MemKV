@@ -25,12 +25,14 @@ func NewBSTNode(key uint32, value *KVNode) *BSTNode {
 
 type BST struct {
 	Root   *BSTNode
+	NCount uint32 //node num
 	RWLock *sync.RWMutex
 }
 
 func BSTer() *BST {
 	return &BST{
 		Root:   nil,
+		NCount: 0,
 		RWLock: new(sync.RWMutex),
 	}
 }
@@ -60,6 +62,7 @@ func (t *BST) Find(key uint32) (p, cur *BSTNode) {
 func (t *BST) Add(key uint32, value *KVNode) {
 	t.RWLock.Lock()
 	defer t.RWLock.Unlock()
+	var add uint32 = 1
 	if t.Root == nil {
 		t.Root = NewBSTNode(key, value)
 		return
@@ -70,8 +73,9 @@ func (t *BST) Add(key uint32, value *KVNode) {
 	} else if key > n.Key {
 		n.Right = NewBSTNode(key, value)
 	} else {
-		n.Value.Add(value)
+		add = n.Value.Add(value)
 	}
+	t.NCount += add
 }
 
 func (n *BSTNode) LeftMax() (p, cur *BSTNode) {
@@ -109,9 +113,10 @@ func (t *BST) Del(key uint32, value *KVNode) {
 	np, n := t.Find(key)
 	if n.Key == key {
 		if n.Value.Length > 1 {
-			n.Value.Del(value)
+			t.NCount -= n.Value.Del(value)
 			return
 		}
+		t.NCount -= 1
 		if n.Left != nil && n.Right != nil {
 			p, cur := n.LeftMax()
 			n.Key = cur.Key

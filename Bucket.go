@@ -2,26 +2,36 @@
 package MemKV
 
 type Bucket struct {
-	Elems  []*BST
-	ECount []uint64
-	Size   int
+	Elems      []*BST
+	Size       uint32
+	Blank      uint32
+	Saturation float32 //饱和度
 }
 
-func NewBucket(size int) *Bucket {
+func NewBucket(size uint32) *Bucket {
 	b := &Bucket{
-		Size:   size,
-		Elems:  make([]*BST, size),
-		ECount: make([]uint64, size),
+		Size:  size,
+		Blank: size,
+		Elems: make([]*BST, size),
 	}
-	for i := 0; i < size; i++ {
+	var i uint32 = 0
+	for i = 0; i < size; i++ {
 		b.Elems[i] = BSTer()
 	}
 	return b
 }
 
+func (b *Bucket) BucketSaturation() {
+	b.Saturation = float32(b.Size-b.Blank) / float32(b.Size)
+}
+
 func (b *Bucket) Put(key []byte, value interface{}, keyHash, bucketID uint32) {
+	ECount := b.Elems[bucketID].NCount
 	b.Elems[bucketID].Add(keyHash, &KVNode{Key: key, Value: value, Next: nil})
-	b.ECount[bucketID]++
+	if ECount == 0 && b.Elems[bucketID].NCount > 0 {
+		b.Blank--
+		b.BucketSaturation()
+	}
 }
 
 func (b *Bucket) Get(key []byte, keyHash, bucketID uint32) interface{} {
@@ -29,6 +39,10 @@ func (b *Bucket) Get(key []byte, keyHash, bucketID uint32) interface{} {
 }
 
 func (b *Bucket) Del(key []byte, keyHash, bucketID uint32) {
+	ECount := b.Elems[bucketID].NCount
 	b.Elems[bucketID].Del(keyHash, &KVNode{Key: key, Value: nil, Next: nil})
-	b.ECount[bucketID]--
+	if ECount > 0 && b.Elems[bucketID].NCount == 0 {
+		b.Blank++
+		b.BucketSaturation()
+	}
 }
